@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-night-sky: #1f1f29;
+  --color-cofounder-blue: #0081c0;
+  --color-action-azure: #41a1cf;
+  --color-pitch-black: #000000;
+  --color-canvas-white: #ffffff;
+  --color-off-white: #fefffc;
+  --color-ash-gray: #f9faf7;
+  --color-cool-gray: #eef1ed;
+  --color-steel-gray: #dee2de;
+  --color-dark-charcoal: #171717;
+  --color-charcoal: #2c2c2c;
+  --color-rich-black: #282834;
+  --color-slate-gray: #444141;
+  --color-medium-gray: #646464;
+  --color-light-gray: #b4b8b4;
+  --color-warm-beige: #f3efe3;
+
+  /* Typography — Font Families */
+  --font-display: "Syne", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-ppmondwest: "DM Serif Display", ui-serif, Georgia, serif;
+  --font-af: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Typography — Scale */
+  --text-caption: 0.8125rem;
+  --leading-caption: 1.5;
+  --tracking-caption: -0.01em;
+  --text-button-label: 1rem;
+  --leading-button-label: 1;
+  --tracking-button-label: -0.012em;
+  --text-subheading: 1.125rem;
+  --leading-subheading: 1.2;
+  --tracking-subheading: -0.01em;
+  --text-heading: 2.5rem;
+  --leading-heading: 1.1;
+  --tracking-heading: -0.02em;
+  --text-heading-lg: 3rem;
+  --leading-heading-lg: 1.1;
+  --tracking-heading-lg: -0.02em;
+  --text-display: 3.375rem;
+  --leading-display: 1.1;
+  --tracking-display: -0.02em;
+
+  /* Typography — Weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Spacing */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-80: 80px;
+
+  /* Border Radius */
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 24px;
+  --radius-full: 50.496px;
+  --radius-nav: 50.496px;
+  --radius-none: 0px;
+  --radius-buttons: 4px;
+  --radius-cardslarge: 24px;
+  --radius-cardssmall: 12px;
+  --radius-cardsmedium: 16px;
+  --radius-navitemssmall: 8px;
+
+  /* Shadows */
+  --shadow-sm: rgba(0, 0, 0, 0.15) 0px 2px 6px 0px;
+  --shadow-subtle: rgb(222, 226, 222) 0px 0px 0px 1px;
+  --shadow-subtle-2: rgba(0, 0, 0, 0.08) 0px 1px 1px 0px, rgba(0, 0, 0, 0.08) 0px 4px 5px 0px;
+  --shadow-subtle-3: rgba(0, 0, 0, 0.06) 0px 2px 2px 0px, rgba(0, 0, 0, 0.04) 0px 0px 0px 5px;
+  --shadow-sm-2: rgba(0, 0, 0, 0.05) 0px 1px 8px 0px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-warm-beige);
+    color: var(--color-dark-charcoal);
+    font-family: var(--font-af);
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  @keyframes scroll-card {
+    /* Hold top */
+    0%, 12% {
+      object-position: 50% 0%;
+    }
+    /* Scroll down to 33% */
+    18%, 30% {
+      object-position: 50% 33%;
+    }
+    /* Scroll down to 66% */
+    36%, 48% {
+      object-position: 50% 66%;
+    }
+    /* Scroll down to bottom */
+    54%, 64% {
+      object-position: 50% 100%;
+    }
+    /* Snap reset to top (66–68% is the fast transition) */
+    68%, 100% {
+      object-position: 50% 0%;
+    }
+  }
+
+  .animate-scroll-card {
+    animation: scroll-card 14s ease-in-out infinite;
+  }
+}
