@@ -68,292 +68,250 @@ export default function ReportDetail() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  function handleDownload() {
+    const code = getActiveCode();
+    if (!code) return;
+    const blob = new Blob([code], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const filename = activeTab === "design-md" ? "DESIGN.md" : activeTab === "tailwind" ? "tailwind.config.ts" : "variables.css";
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const ArchitectureView = (
+    <div className="space-y-20">
+      {/* Design Screenshot (Desktop only) */}
+      <div className="hidden lg:block rounded-[2.5rem] overflow-hidden border border-chalk shadow-subtle-4 bg-powder max-h-[600px] overflow-y-auto no-scrollbar scroll-smooth mb-16">
+        {report.screenshot && (
+          <img src={report.screenshot} alt={report.title} className="w-full h-auto" />
+        )}
+      </div>
+
+      <div className="mb-20 max-w-4xl">
+        <h1 className="font-display text-[3.5rem] md:text-[5rem] leading-[0.9] text-obsidian mb-8 tracking-tighter">
+          {report.title}
+        </h1>
+
+        <p className="font-af text-[20px] md:text-[24px] text-obsidian/80 leading-snug mb-8 font-medium">
+          {report.description}
+        </p>
+
+        <div className="space-y-6 text-[16px] md:text-[17px] text-gravel leading-relaxed font-af">
+          <p>
+            {report.visualLanguage} {report.technicalSystem}
+          </p>
+          <div className="pt-4 flex items-center gap-2 text-obsidian/40 hover:text-obsidian transition-colors cursor-pointer">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+            <span className="text-[14px] font-medium underline underline-offset-4 decoration-chalk hover:decoration-obsidian transition-all">Visit Website</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Colors */}
+      <section>
+        <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Color Palette</h3>
+        <div className="space-y-1">
+          {report.designTokens.colors.map((color) => (
+            <div key={color.name} className="flex items-center justify-between p-4 hover:bg-powder transition-colors group rounded-2xl">
+              <div className="flex items-center gap-6">
+                <div className="w-20 h-20 rounded-2xl border border-chalk shadow-sm" style={{ backgroundColor: color.hex.split(" →")[0] }} />
+                <div>
+                  <p className="font-af text-[13px] font-bold text-obsidian uppercase tracking-wider mb-1">{color.name}</p>
+                  <p className="font-mono text-[12px] text-gravel">{color.hex}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(color.hex);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-slate hover:text-obsidian"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeWidth={2} /></svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Typography */}
+      <section>
+        <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Typography</h3>
+        <div className="border border-chalk rounded-2xl overflow-hidden bg-white/50">
+          {report.designTokens.typography.map((t, idx) => {
+            const phrases = [
+              "Architectural integrity through restraint.",
+              "Systematic balance in a digital age.",
+              "The beauty of functional minimalism.",
+              "Design is the silent ambassador of your brand.",
+              "Elegance is the only beauty that never fades.",
+              "Form follows function, always.",
+              "Simplicity is the ultimate sophistication.",
+              "Typography is the voice of the interface.",
+            ];
+            return (
+              <div key={t.name} className="grid grid-cols-[1fr,150px] gap-4 p-6 border-b border-chalk last:border-b-0 group hover:bg-powder transition-colors">
+                <div className="min-w-0">
+                  <p className="font-af text-[11px] text-slate uppercase tracking-widest mb-4">{t.name}</p>
+                  <p style={{ fontFamily: t.fontFamily, fontSize: t.fontSize, fontWeight: t.fontWeight, lineHeight: t.lineHeight, letterSpacing: t.letterSpacing }} className="text-obsidian leading-tight truncate">
+                    {phrases[idx % phrases.length]}
+                  </p>
+                </div>
+                <div className="font-mono text-[11px] text-gravel space-y-1 flex flex-col justify-center">
+                  <p>{t.fontSize} · {t.fontWeight}</p>
+                  <p>{t.lineHeight} LH</p>
+                  <p className="truncate opacity-50">{t.fontFamily.split(',')[0]}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Spacing & Shadows */}
+      <div className="space-y-16">
+        <section>
+          <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Spacing</h3>
+          <div className="border border-chalk rounded-2xl overflow-hidden bg-white/50">
+            {report.designTokens.spacing.map((s) => (
+              <div key={s.name} className="grid grid-cols-[100px,100px,1fr] gap-4 p-4 border-b border-chalk last:border-b-0 items-center">
+                <span className="font-af text-[12px] text-obsidian font-bold uppercase">{s.name}</span>
+                <span className="font-mono text-[11px] text-gravel">{s.value}</span>
+                <div className="h-2 bg-obsidian/10 rounded-full overflow-hidden max-w-[200px]">
+                  <div className="h-full bg-obsidian/30" style={{ width: `${Math.min((s.px / 80) * 100, 100)}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Shadows</h3>
+          <div className="space-y-3">
+            {report.designTokens.shadows.map((s) => (
+              <div key={s.name} className="p-6 bg-white border border-chalk rounded-2xl flex items-center justify-between group hover:bg-powder transition-colors" style={{ boxShadow: s.value }}>
+                <span className="font-af text-[13px] font-bold text-obsidian uppercase tracking-widest">{s.name}</span>
+                <span className="font-mono text-[11px] text-slate truncate max-w-[300px] opacity-40 group-hover:opacity-100 transition-opacity">{s.value}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Shape & Radius</h3>
+          <div className="border border-chalk rounded-2xl overflow-hidden bg-white/50">
+            {report.designTokens.radii.map((r) => (
+              <div key={r.name} className="grid grid-cols-[100px,100px,1fr] gap-4 p-4 border-b border-chalk last:border-b-0 items-center">
+                <span className="font-af text-[12px] text-obsidian font-bold uppercase">{r.name}</span>
+                <span className="font-mono text-[11px] text-gravel">{r.value}</span>
+                <div className="w-12 h-12 bg-white border border-chalk shadow-sm" style={{ borderRadius: r.value }} />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="bg-eggshell h-[calc(100vh-56px)] overflow-hidden">
-      <div className="max-w-7xl mx-auto h-full px-4 md:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 h-full overflow-y-auto lg:overflow-hidden no-scrollbar">
-          {/* Left Column (Scrollable on LG) */}
-          <div className="h-auto lg:h-full lg:overflow-y-auto no-scrollbar pt-8 pb-12 lg:pb-24 lg:pr-12">
-            <div className="space-y-12">
-              {/* Image Scrollview (Small) */}
-              <div className="rounded-2xl overflow-hidden border border-chalk shadow-subtle-4 bg-powder max-h-[300px] overflow-y-auto no-scrollbar scroll-smooth">
+    <div className="bg-eggshell h-[calc(100vh-3.5rem)] overflow-hidden">
+      <div className="max-w-[1800px] mx-auto h-full px-4 md:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 h-full overflow-hidden">
+
+          {/* Left Column (Desktop only) */}
+          <div className="hidden lg:block h-full overflow-y-auto no-scrollbar pt-12 pb-32 pr-12">
+            {ArchitectureView}
+          </div>
+
+          {/* Right Column (Mobile: Primary, Desktop: Code) */}
+          <div className="h-full overflow-y-auto no-scrollbar border-t lg:border-t-0 lg:border-l border-chalk bg-powder flex flex-col">
+
+            {/* Mobile Screenshot (Only visible on small screens) */}
+            <div className="lg:hidden bg-eggshell px-0 py-0">
+              <div className="rounded-none overflow-hidden border-b border-chalk bg-powder max-h-[400px] overflow-y-auto no-scrollbar">
                 {report.screenshot && (
-                  <img
-                    src={report.screenshot}
-                    alt={`Screenshot of ${report.title}`}
-                    className="w-full h-auto"
-                  />
+                  <img src={report.screenshot} alt={report.title} className="w-full h-auto" />
                 )}
               </div>
-
-              {/* Title & Info */}
-              <div>
-                <h1 className="font-display text-[3.5rem] md:text-[4rem] leading-[1.1] text-obsidian mb-6">
-                  {report.title}
-                </h1>
-                <p className="font-af text-[15px] leading-relaxed text-gravel max-w-xl">
-                  {report.description}
-                </p>
-                <div className="flex items-center gap-4 mt-8">
-                  <Badge className="py-1 px-3 text-[12px]">{report.category}</Badge>
-                  <a
-                    href={report.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[14px] text-obsidian hover:underline font-medium"
-                  >
-                    Visit Website
-                  </a>
-                </div>
-              </div>
-
-              {/* Tokens Visualizer (Preview) - ONLY ON LARGE SCREENS */}
-              <div className="hidden lg:flex flex-col gap-12 pt-12 border-t border-chalk">
-                {/* Overview / Taste */}
-                <section className="bg-powder p-8 rounded-3xl border border-chalk">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="w-2 h-2 rounded-full bg-obsidian animate-pulse" />
-                    <h3 className="font-af text-[13px] font-bold text-obsidian uppercase tracking-[0.2em]">Design Taste, Extracted</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                      <p className="font-display text-[2.2rem] leading-[1.1] text-obsidian mb-6">
-                        {report.description}
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="px-3 py-1 bg-eggshell border border-chalk rounded-full text-[11px] font-medium text-gravel uppercase tracking-wider">{report.category}</span>
-                        <span className="px-3 py-1 bg-eggshell border border-chalk rounded-full text-[11px] font-medium text-gravel uppercase tracking-wider">Achromatic</span>
-                        <span className="px-3 py-1 bg-eggshell border border-chalk rounded-full text-[11px] font-medium text-gravel uppercase tracking-wider">Precision</span>
-                      </div>
-                    </div>
-                    <div className="space-y-6">
-                      <div>
-                        <h4 className="font-af text-[11px] font-bold text-slate uppercase tracking-widest mb-2">Visual Language</h4>
-                        <p className="text-[14px] text-gravel leading-relaxed">
-                          {report.visualLanguage || "Analysis of typographic hierarchy and color contrast ratios."}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="font-af text-[11px] font-bold text-slate uppercase tracking-widest mb-2">Technical System</h4>
-                        <p className="text-[14px] text-gravel leading-relaxed">
-                          {report.technicalSystem || "Extraction of design tokens compatible with modern component libraries."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section>
-                  <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Color Palette</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {report.designTokens.colors.map((color) => (
-                      <div key={color.name} className="flex items-center justify-between p-4 bg-powder rounded-xl border border-chalk hover:bg-eggshell transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full border border-chalk shadow-sm" style={{ backgroundColor: color.hex.split(" →")[0] }} />
-                          <div>
-                            <p className="font-af text-[14px] font-semibold text-obsidian uppercase tracking-wide">{color.name}</p>
-                            <p className="font-mono text-[12px] text-gravel">{color.hex}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section>
-                  <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Typography</h3>
-                  <div className="space-y-4">
-                    {report.designTokens.typography.map((t) => (
-                      <div key={t.name} className="p-6 bg-powder rounded-xl border border-chalk">
-                        <div className="flex items-end justify-between mb-4">
-                          <span className="font-af text-[12px] text-gravel uppercase tracking-widest">{t.name}</span>
-                          <span className="font-mono text-[12px] text-slate">{t.fontSize}</span>
-                        </div>
-                        <p style={{ fontFamily: t.fontFamily, fontSize: t.fontSize, fontWeight: t.fontWeight, lineHeight: t.lineHeight, letterSpacing: t.letterSpacing }} className="text-obsidian leading-tight">
-                          The quick brown fox jumps over the lazy dog.
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  <section>
-                    <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Spacing</h3>
-                    <div className="space-y-4">
-                      {report.designTokens.spacing.map((s) => (
-                        <div key={s.name} className="flex items-center gap-4">
-                          <span className="font-mono text-[12px] text-gravel w-12">{s.name}</span>
-                          <div className="h-2 bg-obsidian/10 rounded-full" style={{ width: Math.max(s.px, 4) }} />
-                          <span className="font-mono text-[12px] text-slate ml-auto">{s.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                  <section>
-                    <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Shadows</h3>
-                    <div className="space-y-4">
-                      {report.designTokens.shadows.map((s) => (
-                        <div key={s.name} className="p-4 bg-eggshell border border-chalk rounded-xl" style={{ boxShadow: s.value }}>
-                          <div className="flex justify-between items-center">
-                            <span className="font-af text-[13px] font-semibold text-obsidian uppercase tracking-wide">{s.name}</span>
-                            <span className="font-mono text-[10px] text-slate truncate max-w-[100px]">{s.value}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                </div>
-
-                <section>
-                  <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Shape & Radius</h3>
-                  <div className="flex flex-wrap gap-6">
-                    {report.designTokens.radii.map((r) => (
-                      <div key={r.name} className="flex flex-col items-center gap-3">
-                        <div className="w-20 h-20 bg-powder border border-chalk shadow-subtle-2 flex items-center justify-center overflow-hidden" style={{ borderRadius: r.value }}>
-                          <div className="w-12 h-12 bg-obsidian/5 border border-obsidian/10" style={{ borderRadius: r.value }} />
-                        </div>
-                        <div className="text-center">
-                          <p className="font-af text-[12px] font-semibold text-obsidian uppercase tracking-tight">{r.name}</p>
-                          <p className="font-mono text-[11px] text-slate">{r.value}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </div>
             </div>
-          </div>
 
-          {/* Right Column (Scrollable Code Tabs + Preview on small screens) */}
-          <div className="h-auto lg:h-full lg:overflow-y-auto no-scrollbar border-t lg:border-t-0 lg:border-l border-chalk lg:pl-12 pt-8 pb-24">
-            {/* Tabs */}
-            <div className="flex items-center gap-6 mb-10 border-b border-chalk pb-0 sticky top-0 bg-eggshell z-20 overflow-x-auto no-scrollbar">
-              {tabs.map((tab) => (
+            {/* Sticky Header Tabs */}
+            <div className="sticky top-0 z-30 bg-eggshell border-b border-chalk flex items-center justify-between h-14 px-8 lg:px-12 w-full flex-none">
+              <div className="flex items-center gap-6 h-full">
+                {tabs.map((tab) => {
+                  if (tab.id === 'preview') {
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab('preview')}
+                        className={`lg:hidden h-full px-1 text-[14px] font-af font-medium transition-all whitespace-nowrap border-b-2 -mb-px flex items-center ${
+                          activeTab === 'preview'
+                            ? "text-obsidian border-obsidian"
+                            : "text-gravel border-transparent hover:text-obsidian"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  }
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as any)}
+                      className={`h-full px-1 text-[14px] font-af font-medium transition-all whitespace-nowrap border-b-2 -mb-px flex items-center ${
+                        activeTab === tab.id
+                          ? "text-obsidian border-obsidian"
+                          : "text-gravel border-transparent hover:text-obsidian"
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-6">
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-3 text-[14px] font-af font-medium transition-all whitespace-nowrap border-b-2 -mb-px ${tab.id === 'preview' ? 'lg:hidden' : ''} ${activeTab === tab.id
-                      ? "text-obsidian border-obsidian"
-                      : "text-gravel border-transparent hover:text-obsidian"
+                  onClick={handleCopy}
+                  className={`transition-all hover:scale-110 ${copied ? "text-green-600" : "text-obsidian/40 hover:text-obsidian"
                     }`}
+                  title="Copy to Clipboard"
                 >
-                  {tab.label}
+                  {copied ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" strokeWidth={2} />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeWidth={2} />
+                    </svg>
+                  )}
                 </button>
-              ))}
-
-              <div className="ml-auto mb-2">
-                <Button variant="outlined" size="sm" onClick={handleCopy} className="text-[12px] py-1 h-auto">
-                  {copied ? "Copied!" : "Copy Code"}
-                </Button>
+                <button
+                  onClick={handleDownload}
+                  className="text-obsidian/40 hover:text-obsidian transition-all hover:scale-110"
+                  title="Download File"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                </button>
               </div>
             </div>
 
-            {/* Tab content */}
-            <div className="mt-4">
-              {activeTab === "preview" && (
-                <div className="lg:hidden">
-                  <div className="flex flex-col gap-12">
-                    {/* Overview / Taste */}
-                    <section className="bg-powder p-8 rounded-3xl border border-chalk">
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className="w-2 h-2 rounded-full bg-obsidian animate-pulse" />
-                        <h3 className="font-af text-[13px] font-bold text-obsidian uppercase tracking-[0.2em]">Design Taste, Extracted</h3>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                          <p className="font-display text-[2.2rem] leading-[1.1] text-obsidian mb-6">
-                            {report.description}
-                          </p>
-                        </div>
-                      </div>
-                    </section>
-
-                    <section>
-                      <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Color Palette</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {report.designTokens.colors.map((color) => (
-                          <div key={color.name} className="flex items-center justify-between p-4 bg-powder rounded-xl border border-chalk">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-full border border-chalk shadow-sm" style={{ backgroundColor: color.hex.split(" →")[0] }} />
-                              <div>
-                                <p className="font-af text-[14px] font-semibold text-obsidian uppercase tracking-wide">{color.name}</p>
-                                <p className="font-mono text-[12px] text-gravel">{color.hex}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-
-                    <section>
-                      <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Typography</h3>
-                      <div className="space-y-4">
-                        {report.designTokens.typography.map((t) => (
-                          <div key={t.name} className="p-6 bg-powder rounded-xl border border-chalk">
-                            <div className="flex items-end justify-between mb-4">
-                              <span className="font-af text-[12px] text-gravel uppercase tracking-widest">{t.name}</span>
-                            </div>
-                            <p style={{ fontFamily: t.fontFamily, fontSize: t.fontSize, fontWeight: t.fontWeight, lineHeight: t.lineHeight, letterSpacing: t.letterSpacing }} className="text-obsidian leading-tight">
-                              The quick brown fox jumps over the lazy dog.
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-
-                    <section>
-                      <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Spacing</h3>
-                      <div className="space-y-4">
-                        {report.designTokens.spacing.map((s) => (
-                          <div key={s.name} className="flex items-center gap-4">
-                            <span className="font-mono text-[12px] text-gravel w-12">{s.name}</span>
-                            <div className="h-2 bg-obsidian/10 rounded-full" style={{ width: Math.max(s.px, 4) }} />
-                            <span className="font-mono text-[12px] text-slate ml-auto">{s.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-
-                    <section>
-                      <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Shadows</h3>
-                      <div className="space-y-4">
-                        {report.designTokens.shadows.map((s) => (
-                          <div key={s.name} className="p-4 bg-eggshell border border-chalk rounded-xl" style={{ boxShadow: s.value }}>
-                            <div className="flex justify-between items-center">
-                              <span className="font-af text-[13px] font-semibold text-obsidian uppercase tracking-wide">{s.name}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-
-                    <section>
-                      <h3 className="font-display text-[2rem] text-obsidian mb-6 pb-2 border-b border-chalk">Shape & Radius</h3>
-                      <div className="flex flex-wrap gap-6">
-                        {report.designTokens.radii.map((r) => (
-                          <div key={r.name} className="flex flex-col items-center gap-3">
-                            <div className="w-20 h-20 bg-powder border border-chalk flex items-center justify-center" style={{ borderRadius: r.value }}>
-                              <div className="w-12 h-12 bg-obsidian/5 border border-obsidian/10" style={{ borderRadius: r.value }} />
-                            </div>
-                            <p className="font-af text-[12px] font-semibold text-obsidian uppercase tracking-tight">{r.name}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  </div>
+            <div className="flex-1 overflow-y-auto no-scrollbar">
+              {activeTab === 'preview' ? (
+                <div className="p-8 md:p-12 bg-eggshell">
+                  {ArchitectureView}
                 </div>
-              )}
-
-              {activeTab !== "preview" && (
-                <div className="bg-powder rounded-2xl border border-chalk overflow-hidden shadow-subtle">
-                  <pre className="p-6 font-mono text-[13px] text-obsidian leading-relaxed whitespace-pre-wrap">
-                    <code>{getActiveCode()}</code>
-                  </pre>
-                </div>
+              ) : (
+                <pre className="p-8 md:p-12 font-mono text-[13px] text-obsidian/80 leading-relaxed overflow-x-auto no-scrollbar">
+                  <code>{getActiveCode()}</code>
+                </pre>
               )}
             </div>
           </div>
+
         </div>
       </div>
     </div>
