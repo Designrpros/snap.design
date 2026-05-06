@@ -1,3 +1,4 @@
+// Unified Design Auditing Interface
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import type { DesignEntry } from "@snap/shared";
