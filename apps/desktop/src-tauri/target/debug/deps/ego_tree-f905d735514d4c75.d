@@ -1,0 +1,10 @@
+/Users/vegarberentsen/Documents/Snap.Design/apps/desktop/src-tauri/target/debug/deps/ego_tree-f905d735514d4c75.d: /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/lib.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/iter.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/display.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/sort.rs
+
+/Users/vegarberentsen/Documents/Snap.Design/apps/desktop/src-tauri/target/debug/deps/libego_tree-f905d735514d4c75.rlib: /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/lib.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/iter.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/display.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/sort.rs
+
+/Users/vegarberentsen/Documents/Snap.Design/apps/desktop/src-tauri/target/debug/deps/libego_tree-f905d735514d4c75.rmeta: /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/lib.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/iter.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/display.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/sort.rs
+
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/lib.rs:
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/iter.rs:
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/display.rs:
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ego-tree-0.10.0/src/sort.rs:

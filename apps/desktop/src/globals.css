@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "@snap/shared/styles";
+
+@source "../../packages/shared/src/**/*.{ts,tsx}";
+@source "../../packages/extractor/src/**/*.{ts,tsx}";
+@source "./src/**/*.{ts,tsx}";

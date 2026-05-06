@@ -1,0 +1,8 @@
+/Users/vegarberentsen/Documents/Snap.Design/apps/desktop/src-tauri/target/debug/deps/time_core-d0d01ca77cf19134.d: /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/lib.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/convert.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/hint.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/util.rs
+
+/Users/vegarberentsen/Documents/Snap.Design/apps/desktop/src-tauri/target/debug/deps/libtime_core-d0d01ca77cf19134.rmeta: /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/lib.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/convert.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/hint.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/util.rs
+
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/lib.rs:
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/convert.rs:
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/hint.rs:
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/time-core-0.1.8/src/util.rs:

@@ -1,0 +1,8 @@
+/Users/vegarberentsen/Documents/Snap.Design/apps/desktop/src-tauri/target/debug/deps/serde_with_macros-c14334eb70f682a3.d: /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/lib.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/apply.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/lazy_bool.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/utils.rs
+
+/Users/vegarberentsen/Documents/Snap.Design/apps/desktop/src-tauri/target/debug/deps/libserde_with_macros-c14334eb70f682a3.dylib: /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/lib.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/apply.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/lazy_bool.rs /Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/utils.rs
+
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/lib.rs:
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/apply.rs:
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/lazy_bool.rs:
+/Users/vegarberentsen/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_with_macros-3.19.0/src/utils.rs:
