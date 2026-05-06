@@ -46,13 +46,11 @@ function FilterBar({
 
 /* ── SegmentedPicker ─────────────────────────────── */
 
-type Segment = "all" | "popular" | "newest" | "my-snaps";
+type Segment = "all" | "newest";
 
 const segments: { id: Segment; label: string }[] = [
-  { id: "all", label: "Trending" },
-  { id: "popular", label: "Popular" },
+  { id: "all", label: "All Snaps" },
   { id: "newest", label: "Newest" },
-  { id: "my-snaps", label: "My Snaps" },
 ];
 
 function SegmentedPicker({
@@ -292,17 +290,6 @@ export default function Gallery() {
     console.log("Deleted directly, new count:", updated.length);
   }
 
-  function handleClearAll() {
-    if (window.confirm("Are you sure you want to clear your entire gallery? This cannot be undone.")) {
-      localStorage.removeItem("snap-design-reports");
-      setUserReports([]);
-    }
-  }
-
-  const allDesigns = useMemo(() => {
-    return userReports;
-  }, [userReports]);
-
   const filtered = useMemo(() => {
     let result = userReports;
     
@@ -326,7 +313,7 @@ export default function Gallery() {
     return result;
   }, [userReports, activeCategory, query]);
 
-  const sortKey = segment === "my-snaps" ? undefined : segment === "all" ? "trending" : segment;
+  const sortKey = segment === "newest" ? "newest" : undefined;
 
   const designs = useMemo(() => {
     if (!sortKey) return filtered;
@@ -454,17 +441,9 @@ export default function Gallery() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <SegmentedPicker activeSegment={segment} onChange={handleSegment} />
-            {userReports.length > 0 && (
-              <button 
-                onClick={handleClearAll}
-                className="font-af text-[12px] text-gravel hover:text-red-500 transition-colors uppercase tracking-widest font-bold"
-              >
-                Clear All
-              </button>
-            )}
           </div>
           <p className="font-af text-caption text-medium-gray">
-            {designs.length} design{designs.length !== 1 ? "s" : ""}
+            {designs.length} extraction{designs.length !== 1 ? "s" : ""}
           </p>
         </div>
         <GalleryGrid designs={designs} onDelete={handleDelete} />
