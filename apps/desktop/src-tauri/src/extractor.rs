@@ -69,32 +69,56 @@ pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
         .build()
         .map_err(|e| e.to_string())?;
 
-    let body = client
+    let response = client
         .get(&url)
         .send()
         .await
-        .map_err(|e| format!("Failed to fetch URL: {}", e))?
-        .text()
+        .map_err(|e| format!("Failed to fetch URL: {}", e))?;
+
+    let final_url = response.url().clone();
+    let body = response.text()
         .await
         .map_err(|e| format!("Failed to read response: {}", e))?;
 
-    let document = Html::parse_document(&body);
+    // Perform all DOM-dependent extraction in a block to ensure non-Send types are dropped before awaits
+    let (id, title, description, mut colors, typography, spacing, shadows, radii, stylesheet_urls) = {
+        let document = Html::parse_document(&body);
+        
+        let title = extract_title(&document)
+            .unwrap_or_else(|| "Untitled Site".to_string());
+        let description = extract_meta(&document, "description")
+            .unwrap_or_else(|| "No description available".to_string());
+        
+        let colors = extract_colors_from_styles(&document);
+        let typography = extract_typography(&document);
+        let spacing = extract_spacing(&document);
+        let shadows = extract_shadows(&document);
+        let radii = extract_radii(&document);
+        let id = slugify(&title);
 
-    let title = extract_title(&document)
-        .unwrap_or_else(|| "Untitled Site".to_string());
+        let mut urls = Vec::new();
+        let link_selector = Selector::parse("link[rel=\"stylesheet\"]").unwrap();
+        for link in document.select(&link_selector) {
+            if let Some(href) = link.value().attr("href") {
+                if let Ok(abs_url) = final_url.join(href) {
+                    urls.push(abs_url);
+                }
+            }
+        }
+        (id, title, description, colors, typography, spacing, shadows, radii, urls)
+    };
 
-    let description = extract_meta(&document, "description")
-        .unwrap_or_else(|| "No description available".to_string());
+    // Now it is safe to await network calls as 'document' is out of scope
+    for abs_url in stylesheet_urls {
+        if let Ok(css_res) = client.get(abs_url).send().await {
+            if let Ok(css_text) = css_res.text().await {
+                extract_colors_from_text(&css_text, &mut colors);
+            }
+        }
+    }
 
-    let colors = extract_colors(&document);
-    let typography = extract_typography(&document);
-    let spacing = extract_spacing(&document);
-    let shadows = extract_shadows(&document);
-    let radii = extract_radii(&document);
-
-    let id = slugify(&title);
     let tokens = DesignTokens {
-        colors,
+        colors, // No longer limiting to 8
         typography,
         spacing,
         shadows,
@@ -102,7 +126,6 @@ pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
     };
     
     let design_md = generate_design_markdown(&title, &tokens);
-
     let category = classify_category(&title, &description);
 
     Ok(ExtractionResult {
@@ -117,6 +140,53 @@ pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
         design_tokens: tokens,
         design_markdown: design_md,
     })
+}
+
+fn extract_colors_from_styles(doc: &Html) -> Vec<ColorToken> {
+    let mut colors = Vec::new();
+    let style_selector = Selector::parse("style").unwrap();
+    for style in doc.select(&style_selector) {
+        let text = style.text().collect::<Vec<_>>().join("");
+        extract_colors_from_text(&text, &mut colors);
+    }
+    colors
+}
+
+fn extract_colors_from_text(text: &str, target: &mut Vec<ColorToken>) {
+    // Comprehensive regex for Hex, RGB, HSL, and OKLCH
+    let hex_re = regex::Regex::new(r"#(?:[0-9a-fA-F]{3,4}){1,2}").unwrap();
+    let fn_re = regex::Regex::new(r"(?:rgb|hsl|oklch)a?\([^)]+\)").unwrap();
+    
+    let mut seen = std::collections::HashSet::new();
+    for c in target.iter() {
+        seen.insert(c.hex.to_lowercase());
+    }
+
+    // 1. Extract Hex
+    for cap in hex_re.captures_iter(text) {
+        let val = cap[0].to_string().to_lowercase();
+        if seen.contains(&val) || val.len() < 4 { continue; }
+        seen.insert(val.clone());
+        let name = format!("color-{}", target.len() + 1);
+        target.push(ColorToken {
+            name,
+            css_variable: format!("--color-{}", target.len() + 1),
+            hex: val,
+        });
+    }
+
+    // 2. Extract functional colors
+    for cap in fn_re.captures_iter(text) {
+        let val = cap[0].to_string().to_lowercase();
+        if seen.contains(&val) { continue; }
+        seen.insert(val.clone());
+        let name = format!("color-{}", target.len() + 1);
+        target.push(ColorToken {
+            name,
+            css_variable: format!("--color-{}", target.len() + 1),
+            hex: val,
+        });
+    }
 }
 
 fn extract_title(doc: &Html) -> Option<String> {
@@ -138,68 +208,61 @@ fn extract_meta(doc: &Html, name: &str) -> Option<String> {
     }
 }
 
-fn extract_colors(doc: &Html) -> Vec<ColorToken> {
+fn extract_colors(doc: &Html, client: &reqwest::Client, base_url: &str) -> Vec<ColorToken> {
     let mut colors = Vec::new();
-    let style_selector = Selector::parse("style").unwrap();
-    
     let mut all_css = String::new();
+    
+    // 1. Inline <style> tags
+    let style_selector = Selector::parse("style").unwrap();
     for style in doc.select(&style_selector) {
         all_css.push_str(&style.text().collect::<Vec<_>>().join(""));
     }
 
+    // 2. External <link> stylesheets
+    let link_selector = Selector::parse("link[rel=\"stylesheet\"]").unwrap();
+    let mut external_css_futures = Vec::new();
+    
+    for link in doc.select(&link_selector) {
+        if let Some(href) = link.value().attr("href") {
+            let full_url = if href.starts_with("http") {
+                href.to_string()
+            } else if href.starts_with("//") {
+                format!("https:{}", href)
+            } else {
+                format!("{}/{}", base_url.trim_end_matches('/'), href.trim_start_matches('/'))
+            };
+            external_css_futures.push(client.get(full_url).send());
+        }
+    }
+
+    // Since we are in an async context, we can wait for these
+    // For simplicity in this script, we'll use a block_on or just fetch sequentially if needed
+    // But since this is a command, we can just await them.
+    
     let mut seen = std::collections::HashSet::new();
 
-    // Extract CSS custom properties
-    for cap in css_var_regex().captures_iter(&all_css) {
-        let name = cap[1].to_string();
-        let value = cap[2].to_string().trim().to_string();
-        if seen.contains(&name) {
-            continue;
-        }
-        seen.insert(name.clone());
-
-        if is_color(&value) {
-            let pretty_name = name.trim_start_matches('-').replace('-', " ");
-            colors.push(ColorToken {
-                name: pretty_name,
-                css_variable: format!("--{}", name),
-                hex: value,
-            });
-        }
+    // Extract colors from all collected CSS
+    let color_regex = regex::Regex::new(r"#(?:[0-9a-fA-F]{3,4}){1,2}|rgb\([^)]+\)|hsl\([^)]+\)|oklch\([^)]+\)").unwrap();
+    
+    for cap in color_regex.captures_iter(&all_css) {
+        let val = cap[0].to_string().to_lowercase();
+        if seen.contains(&val) || val.len() < 4 { continue; }
+        seen.insert(val.clone());
+        
+        let name = format!("color-{}", colors.len() + 1);
+        colors.push(ColorToken {
+            name: name.clone(),
+            hex: val.clone(),
+            css_variable: format!("--{}", name),
+        });
+        
+        if colors.len() >= 8 { break; }
     }
 
-    // Extract hex colors from inline styles and style attributes
-    let all_attr_selector = Selector::parse("[style]").unwrap();
-    for element in doc.select(&all_attr_selector) {
-        if let Some(style) = element.value().attr("style") {
-            for cap in hex_regex().captures_iter(style) {
-                let hex = cap[0].to_string();
-                if seen.contains(&hex) {
-                    continue;
-                }
-                seen.insert(hex.clone());
-                let idx = colors.len() + 1;
-                colors.push(ColorToken {
-                    name: format!("color-{}", idx),
-                    css_variable: format!("--color-{}", idx),
-                    hex,
-                });
-            }
-        }
-    }
-
-    // Fallback: detect common background/text colors from body
+    // Fallback if nothing found
     if colors.is_empty() {
-        colors.push(ColorToken {
-            name: "background".to_string(),
-            css_variable: "--background".to_string(),
-            hex: "#ffffff".to_string(),
-        });
-        colors.push(ColorToken {
-            name: "text".to_string(),
-            css_variable: "--text".to_string(),
-            hex: "#1a1a1a".to_string(),
-        });
+        colors.push(ColorToken { name: "Primary".to_string(), hex: "#000000".to_string(), css_variable: "--primary".to_string() });
+        colors.push(ColorToken { name: "Background".to_string(), hex: "#ffffff".to_string(), css_variable: "--background".to_string() });
     }
 
     colors
@@ -232,8 +295,10 @@ fn extract_typography(doc: &Html) -> Vec<TypographyToken> {
     }
 
     let font_family_re = regex::Regex::new(r"font-family\s*:\s*([^;}]+)").unwrap();
+    let font_size_re = regex::Regex::new(r"font-size\s*:\s*([^;}]+)").unwrap();
     let mut seen = std::collections::HashSet::new();
 
+    // Primary font extraction
     for cap in font_family_re.captures_iter(&all_css) {
         let family = cap[1].trim().trim_matches('"').trim_matches('\'').to_string();
         if seen.contains(&family) || family == "inherit" {
@@ -242,20 +307,25 @@ fn extract_typography(doc: &Html) -> Vec<TypographyToken> {
         seen.insert(family.clone());
 
         let name = family.split(',').next().unwrap_or(&family).trim_matches('"').trim_matches('\'').to_string();
+        
+        // Try to find a corresponding size in the same block (very basic)
+        let size = "16px".to_string(); 
+        
         typography.push(TypographyToken {
             name: name.clone(),
             font_family: family,
-            font_size: "16px".to_string(),
+            font_size: size,
             font_weight: 400,
             line_height: "1.5".to_string(),
             letter_spacing: "0".to_string(),
         });
+        if typography.len() >= 5 { break; }
     }
 
     if typography.is_empty() {
         typography.push(TypographyToken {
-            name: "Body".to_string(),
-            font_family: "Inter, sans-serif".to_string(),
+            name: "Main Sans".to_string(),
+            font_family: "Inter, system-ui, sans-serif".to_string(),
             font_size: "16px".to_string(),
             font_weight: 400,
             line_height: "1.5".to_string(),
@@ -266,16 +336,33 @@ fn extract_typography(doc: &Html) -> Vec<TypographyToken> {
     typography
 }
 
-fn extract_spacing(_doc: &Html) -> Vec<SpacingToken> {
-    vec![
-        SpacingToken { name: "xs".to_string(), value: "4px".to_string(), px: 4 },
-        SpacingToken { name: "sm".to_string(), value: "8px".to_string(), px: 8 },
-        SpacingToken { name: "md".to_string(), value: "16px".to_string(), px: 16 },
-        SpacingToken { name: "lg".to_string(), value: "24px".to_string(), px: 24 },
-        SpacingToken { name: "xl".to_string(), value: "32px".to_string(), px: 32 },
-        SpacingToken { name: "2xl".to_string(), value: "48px".to_string(), px: 48 },
-        SpacingToken { name: "3xl".to_string(), value: "64px".to_string(), px: 64 },
-    ]
+fn extract_spacing(doc: &Html) -> Vec<SpacingToken> {
+    // Look for --spacing or similar variables
+    let mut spacing = Vec::new();
+    let style_selector = Selector::parse("style").unwrap();
+    let mut all_css = String::new();
+    for style in doc.select(&style_selector) {
+        all_css.push_str(&style.text().collect::<Vec<_>>().join(""));
+    }
+
+    let space_re = regex::Regex::new(r"--spacing-([\w-]+)\s*:\s*(\d+px)").unwrap();
+    for cap in space_re.captures_iter(&all_css) {
+        let name = cap[1].to_string();
+        let value = cap[2].to_string();
+        let px = value.replace("px", "").parse::<i32>().unwrap_or(0);
+        spacing.push(SpacingToken { name, value, px });
+    }
+
+    if spacing.is_empty() {
+        return vec![
+            SpacingToken { name: "xs".to_string(), value: "4px".to_string(), px: 4 },
+            SpacingToken { name: "sm".to_string(), value: "8px".to_string(), px: 8 },
+            SpacingToken { name: "md".to_string(), value: "16px".to_string(), px: 16 },
+            SpacingToken { name: "lg".to_string(), value: "24px".to_string(), px: 24 },
+            SpacingToken { name: "xl".to_string(), value: "32px".to_string(), px: 32 },
+        ];
+    }
+    spacing
 }
 
 fn extract_shadows(doc: &Html) -> Vec<ShadowToken> {

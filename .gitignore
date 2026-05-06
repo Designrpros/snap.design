@@ -3,3 +3,9 @@ node_modules
 .env
 .env.local
 tsconfig.tsbuildinfo
+target/
+dist/
+build/
+.DS_Store
+*.log
+src-tauri/target

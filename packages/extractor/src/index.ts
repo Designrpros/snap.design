@@ -85,7 +85,7 @@ async function extractDesignMock(url: string): Promise<DesignEntry> {
   if (match) return match;
 
   // Add a deliberate delay to simulate "deep analysis"
-  await new Promise((resolve) => setTimeout(resolve, 3500 + Math.random() * 2000));
+  await new Promise((resolve) => setTimeout(resolve, 2000 + Math.random() * 1000));
 
   const id = url
     .replace(/https?:\/\//, "")
@@ -96,62 +96,39 @@ async function extractDesignMock(url: string): Promise<DesignEntry> {
   let title = url.replace(/https?:\/\/(www\.)?/, "").split("/")[0];
   title = title.charAt(0).toUpperCase() + title.slice(1).split(".")[0];
 
-  // Use a more reliable screenshot service or a backup
   const screenshot = `https://s0.wp.com/mshots/v1/${encodeURIComponent(url)}?w=1200&h=900`;
 
-  // Generate "randomized" but consistent tokens based on the URL hash
+  // Procedural Generation based on URL hash
   const hash = url.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  const themes = [
-    {
-      colors: [
-        { name: "Obsidian", hex: "#121212", cssVariable: "--obsidian" },
-        { name: "Eggshell", hex: "#FDFCFB", cssVariable: "--eggshell" },
-        { name: "Gravel", hex: "#666666", cssVariable: "--gravel" },
-        { name: "Powder", hex: "#F5F5F5", cssVariable: "--powder" },
-      ],
-      description: "A sophisticated achromatic system focused on high-contrast typography and spatial balance.",
-      visualLanguage: "Restrained color palette with focus on typography and spatial hierarchy.",
-      technicalSystem: "Optimized for modern web frameworks with high-fidelity token extraction."
-    },
-    {
-      colors: [
-        { name: "Midnight", hex: "#0F172A", cssVariable: "--midnight" },
-        { name: "Slate", hex: "#64748B", cssVariable: "--slate" },
-        { name: "Indigo", hex: "#6366F1", cssVariable: "--indigo" },
-        { name: "Ghost", hex: "#F8FAFC", cssVariable: "--ghost" },
-      ],
-      description: "A modern developer-focused system featuring deep indigos and crisp slate accents.",
-      visualLanguage: "Deep navy foundations with high-saturation accent colors for technical clarity.",
-      technicalSystem: "Tailwind v4 ready with modular CSS variable injection."
-    },
-    {
-      colors: [
-        { name: "Ink", hex: "#1E1E1E", cssVariable: "--ink" },
-        { name: "Paper", hex: "#FFFFFF", cssVariable: "--paper" },
-        { name: "Crimson", hex: "#DC2626", cssVariable: "--crimson" },
-        { name: "Mist", hex: "#F3F4F6", cssVariable: "--mist" },
-      ],
-      description: "An editorial design language with bold highlights and a stark typographic hierarchy.",
-      visualLanguage: "Editorial-style contrast with bold crimson highlights on stark white paper.",
-      technicalSystem: "Fluid typography and spacing systems mapped to viewport-relative units."
-    }
+  
+  // Generate HSL based on hash
+  const hue = hash % 360;
+  const saturation = 40 + (hash % 40);
+  const lightness = 10 + (hash % 20);
+
+  const colors = [
+    { name: "Primary", hex: `hsl(${hue}, ${saturation}%, ${lightness}%)`, cssVariable: "--primary" },
+    { name: "Secondary", hex: `hsl(${(hue + 180) % 360}, ${saturation}%, ${lightness + 20}%)`, cssVariable: "--secondary" },
+    { name: "Surface", hex: "#FDFCFB", cssVariable: "--surface" },
+    { name: "Accent", hex: `hsl(${(hue + 120) % 360}, ${saturation}%, 50%)`, cssVariable: "--accent" },
   ];
 
-  const theme = themes[hash % themes.length];
+  const categories: DesignEntry["category"][] = ["SaaS", "E-commerce", "Portfolio", "Dashboard", "AI", "Developer Tools"];
+  const category = categories[hash % categories.length];
 
   return {
     id,
     title,
-    category: (hash % 3 === 0 ? "E-commerce" : hash % 3 === 1 ? "SaaS" : "Portfolio") as DesignEntry["category"],
+    category,
     url,
     iframeUrl: url,
-    description: theme.description,
-    visualLanguage: theme.visualLanguage,
-    technicalSystem: theme.technicalSystem,
+    description: `A unique ${category.toLowerCase()} design system characterized by its procedural color balance.`,
+    visualLanguage: `Dynamic ${hue}° hue-based visual system with balanced saturation.`,
+    technicalSystem: "Synthesized design tokens mapped to viewport-relative units for modern extraction.",
     featured: false,
     screenshot,
     designTokens: {
-      colors: theme.colors,
+      colors,
       typography: [
         { name: "Display", fontFamily: "Inter, sans-serif", fontSize: "3rem", fontWeight: 700, lineHeight: "1.1", letterSpacing: "-0.04em" },
         { name: "Heading", fontFamily: "Inter, sans-serif", fontSize: "1.5rem", fontWeight: 600, lineHeight: "1.2", letterSpacing: "-0.02em" },
@@ -176,7 +153,7 @@ async function extractDesignMock(url: string): Promise<DesignEntry> {
         { name: "full", value: "9999px", px: 9999 },
       ],
     },
-    designMarkdown: `# ${title} Design System\n\n## Overview\nThis design system was extracted from ${url}. ${theme.description}\n\n## Core Principles\n- **Precision Extraction**: Verified spatial systems and token accuracy.\n- **Scalable Tokens**: Normalized for modern CSS and Tailwind v4.\n`,
+    designMarkdown: `# ${title} Design System\n\n## Overview\nThis design system was extracted from ${url}. It features a unique palette of ${colors.length} tokens.\n\n## Core Principles\n- **Precision Extraction**: Verified spatial systems and token accuracy.\n- **Scalable Tokens**: Normalized for modern CSS and Tailwind v4.\n`,
   };
 }
 
