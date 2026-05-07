@@ -75,7 +75,7 @@ export default function ReportDetail() {
     const blob = new Blob([code], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const filename = activeTab === "design-md" ? "DESIGN.md" : activeTab === "tailwind" ? "tailwind.config.ts" : "variables.css";
+    const filename = activeTab === "design-md" ? "DESIGN.md" : activeTab === "tailwind" ? "global.css" : "variables.css";
     a.href = url;
     a.download = filename;
     a.click();

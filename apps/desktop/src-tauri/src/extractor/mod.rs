@@ -37,7 +37,7 @@ pub struct ExtractionResult {
 #[tauri::command]
 pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
     let client = reqwest::Client::builder()
-        .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36")
+        .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
         .build()
         .map_err(|e| e.to_string())?;
 
@@ -52,21 +52,28 @@ pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
         .await
         .map_err(|e| format!("Failed to read response: {}", e))?;
 
-    // Perform all DOM-dependent extraction in a block to ensure non-Send types are dropped before awaits
-    let (id, title, description, mut colors, typography, spacing, shadows, radii, stylesheet_urls) = {
+    let (id, title, description, mut colors, mut typography, mut spacing, mut shadows, mut radii, stylesheet_urls, inline_css) = {
         let document = Html::parse_document(&body);
-        
+
         let title = utils::extract_title(&document)
-            .unwrap_or_else(|| "Untitled Site".to_string());
+            .unwrap_or_default();
         let description = utils::extract_meta(&document, "description")
-            .unwrap_or_else(|| "No description available".to_string());
-        
+            .unwrap_or_default();
+
         let colors = colors::extract_colors_from_styles(&document);
         let typography = typography::extract_typography(&document);
         let spacing = spacing::extract_spacing(&document);
         let shadows = shadows::extract_shadows(&document);
         let radii = radii::extract_radii(&document);
         let id = utils::slugify(&title);
+
+        // Collect inline CSS text for global base font-size detection
+        let style_selector = Selector::parse("style").unwrap();
+        let mut inline = String::new();
+        for style in document.select(&style_selector) {
+            inline.push_str(&style.text().collect::<Vec<_>>().join(""));
+            inline.push('\n');
+        }
 
         let mut urls = Vec::new();
         let link_selector = Selector::parse("link[rel=\"stylesheet\"]").unwrap();
@@ -77,17 +84,36 @@ pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
                 }
             }
         }
-        (id, title, description, colors, typography, spacing, shadows, radii, urls)
+        (id, title, description, colors, typography, spacing, shadows, radii, urls, inline)
     };
 
-    // Now it is safe to await network calls as 'document' is out of scope
+    // Fetch external stylesheets and extract ALL token types from them
+    let mut all_css = inline_css.clone();
+    let mut external_css_list: Vec<String> = Vec::new();
+
     for abs_url in stylesheet_urls {
         if let Ok(css_res) = client.get(abs_url).send().await {
             if let Ok(css_text) = css_res.text().await {
-                colors::extract_colors_from_text(&css_text, &mut colors);
+                all_css.push_str(&css_text);
+                external_css_list.push(css_text);
             }
         }
     }
+
+    // Compute global base font-size from combined inline + external CSS
+    let base_font_size = typography::find_base_font_size(&all_css)
+        .unwrap_or_else(|| "16px".to_string());
+
+    for css_text in &external_css_list {
+        colors::extract_colors_from_text(css_text, &mut colors);
+        typography::extract_typography_from_text(css_text, &mut typography, &base_font_size);
+        spacing::extract_spacing_from_text(css_text, &mut spacing);
+        shadows::extract_shadows_from_text(css_text, &mut shadows);
+        radii::extract_radii_from_text(css_text, &mut radii);
+    }
+
+    // Final deduplication across inline + external sources
+    typography::deduplicate_typography(&mut typography);
 
     let tokens = DesignTokens {
         colors,
@@ -96,7 +122,7 @@ pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
         shadows,
         radii,
     };
-    
+
     let design_md = utils::generate_design_markdown(&title, &tokens);
     let category = utils::classify_category(&title, &description);
 

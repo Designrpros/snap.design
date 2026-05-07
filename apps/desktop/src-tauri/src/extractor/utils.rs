@@ -97,29 +97,47 @@ pub fn classify_category(title: &str, description: &str) -> String {
 pub fn generate_design_markdown(title: &str, tokens: &DesignTokens) -> String {
     let mut md = String::new();
     md.push_str(&format!("# {}\n\n", title));
+
     md.push_str("## Colors\n\n");
-    md.push_str("| Name | Hex | CSS Variable |\n");
-    md.push_str("|------|-----|-------------|\n");
+    md.push_str("| Name | Hex | CSS Variable |\n|------|-----|-------------|\n");
     for c in &tokens.colors {
-        md.push_str(&format!(
-            "| {} | `{}` | `{}` |\n",
-            c.name, c.hex, c.css_variable
-        ));
+        md.push_str(&format!("| {} | `{}` | `{}` |\n", c.name, c.hex, c.css_variable));
     }
+
     md.push_str("\n## Typography\n\n");
     for t in &tokens.typography {
         md.push_str(&format!(
-            "**{}** — {} {} {}/{}\n\n",
-            t.name, t.font_family, t.font_weight, t.font_size, t.line_height
+            "**{}** — {} weight {} {}/{} ls {}\n\n",
+            t.name, t.font_family, t.font_weight, t.font_size, t.line_height, t.letter_spacing
         ));
     }
+
+    if !tokens.spacing.is_empty() {
+        md.push_str("## Spacing\n\n");
+        md.push_str("| Name | Value | Px |\n|------|-------|----|\n");
+        for s in &tokens.spacing {
+            md.push_str(&format!("| {} | `{}` | {} |\n", s.name, s.value, s.px));
+        }
+        md.push('\n');
+    }
+
     if !tokens.shadows.is_empty() {
         md.push_str("## Shadows\n\n");
-        md.push_str("| Name | Value |\n");
-        md.push_str("|------|-------|\n");
+        md.push_str("| Name | Value |\n|------|-------|\n");
         for s in &tokens.shadows {
             md.push_str(&format!("| {} | `{}` |\n", s.name, s.value));
         }
+        md.push('\n');
     }
+
+    if !tokens.radii.is_empty() {
+        md.push_str("## Border Radius\n\n");
+        md.push_str("| Name | Value | Px |\n|------|-------|----|\n");
+        for r in &tokens.radii {
+            md.push_str(&format!("| {} | `{}` | {} |\n", r.name, r.value, r.px));
+        }
+        md.push('\n');
+    }
+
     md
 }
