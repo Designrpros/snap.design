@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { DesignEntry, SortOption } from "@snap/shared";
-import { categories, getDesignsByCategory, getSortedDesigns } from "@snap/shared";
 import { Button, Input, Card, Badge } from "@snap/shared";
 import { extractDesign } from "@snap/extractor";
 import { getReports, saveReport, deleteReport } from "../lib/reports-store";
@@ -13,10 +12,17 @@ import { getReports, saveReport, deleteReport } from "../lib/reports-store";
 function FilterBar({
   activeCategory,
   onFilter,
+  reports,
 }: {
   activeCategory?: string;
   onFilter: (cat: string | null) => void;
+  reports: DesignEntry[];
 }) {
+  const usedCategories = useMemo(() => {
+    const set = new Set(reports.map((r) => r.category));
+    return Array.from(set).sort();
+  }, [reports]);
+
   return (
     <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-3 mt-8">
       <Button
@@ -28,7 +34,7 @@ function FilterBar({
       >
         All
       </Button>
-      {categories.map((cat) => (
+      {usedCategories.map((cat) => (
         <Button
           key={cat}
           variant="outlined"
@@ -66,10 +72,10 @@ function SegmentedPicker({
         <Button
           key={seg.id}
           variant="ghost"
-          size="sm"
+          size="md"
           active={activeSegment === seg.id}
           onClick={() => onChange(seg.id)}
-          className={`text-[13px] font-medium transition-all ${
+          className={`text-[13px] font-medium transition-all px-5 ${
             activeSegment === seg.id
               ? "bg-obsidian text-eggshell shadow-subtle-2"
               : "text-gravel hover:text-obsidian"
@@ -380,10 +386,12 @@ export default function Gallery() {
       {/* Hero */}
       <section className="bg-eggshell text-center px-4 pt-20 md:pt-32 pb-24 md:pb-32 border-b border-chalk">
         <h1 className="font-display text-[3.5rem] md:text-[5.5rem] leading-[1] tracking-tight font-light text-obsidian mb-6">
-          Design taste, extracted.
+          Design, decoded.
         </h1>
         <p className="font-af text-lg text-gravel max-w-xl mx-auto leading-relaxed mb-12">
-          Browse design systems from the world&apos;s best products. Copy colors, typography, spacing, and shadows directly into your project.
+          {userReports.length > 0
+            ? `${userReports.length} design system${userReports.length === 1 ? "" : "s"} extracted. Paste a URL to add another.`
+            : "Paste a URL to extract colors, typography, spacing, and shadows from any website."}
         </p>
         <div className="max-w-2xl mx-auto mb-10">
           <div className="relative flex items-center p-1 bg-eggshell border border-chalk rounded-2xl shadow-subtle">
@@ -393,7 +401,7 @@ export default function Gallery() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleExtract()}
-              className="flex-1 bg-transparent border-none focus:ring-0 px-5 py-3 text-obsidian placeholder:text-slate font-af text-[15px]"
+              className="flex-1 bg-transparent border-none px-5 py-3 text-obsidian placeholder:text-slate font-af text-[15px] outline-none"
             />
             {isUrl(query) ? (
               <button 
@@ -433,7 +441,7 @@ export default function Gallery() {
             </p>
           </div>
         )}
-        <FilterBar activeCategory={activeCategory} onFilter={handleFilter} />
+        <FilterBar activeCategory={activeCategory} onFilter={handleFilter} reports={userReports} />
       </section>
 
       {/* Gallery */}
@@ -442,7 +450,7 @@ export default function Gallery() {
           <div className="flex items-center gap-4">
             <SegmentedPicker activeSegment={segment} onChange={handleSegment} />
           </div>
-          <p className="font-af text-caption text-medium-gray">
+          <p className="font-af text-caption text-slate">
             {designs.length} extraction{designs.length !== 1 ? "s" : ""}
           </p>
         </div>

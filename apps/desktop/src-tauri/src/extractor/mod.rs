@@ -52,13 +52,21 @@ pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
         .await
         .map_err(|e| format!("Failed to read response: {}", e))?;
 
-    let (id, title, description, mut colors, mut typography, mut spacing, mut shadows, mut radii, stylesheet_urls, inline_css) = {
+    let (id, title, description, mut colors, mut typography, mut spacing, mut shadows, mut radii, stylesheet_urls, inline_css, rich_description) = {
         let document = Html::parse_document(&body);
 
         let title = utils::extract_title(&document)
             .unwrap_or_default();
         let description = utils::extract_meta(&document, "description")
             .unwrap_or_default();
+        let keywords = utils::extract_meta(&document, "keywords")
+            .unwrap_or_default();
+        let og_title = utils::extract_og(&document, "title")
+            .unwrap_or_default();
+        let og_description = utils::extract_og(&document, "description")
+            .unwrap_or_default();
+
+        let rich_description = format!("{} {} {} {}", description, keywords, og_title, og_description);
 
         let colors = colors::extract_colors_from_styles(&document);
         let typography = typography::extract_typography(&document);
@@ -84,7 +92,7 @@ pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
                 }
             }
         }
-        (id, title, description, colors, typography, spacing, shadows, radii, urls, inline)
+        (id, title, description, colors, typography, spacing, shadows, radii, urls, inline, rich_description)
     };
 
     // Fetch external stylesheets and extract ALL token types from them
@@ -124,7 +132,7 @@ pub async fn extract_url(url: String) -> Result<ExtractionResult, String> {
     };
 
     let design_md = utils::generate_design_markdown(&title, &tokens);
-    let category = utils::classify_category(&title, &description);
+    let category = utils::classify_category(&title, &rich_description);
 
     Ok(ExtractionResult {
         id: id.clone(),

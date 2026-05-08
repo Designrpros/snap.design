@@ -10,9 +10,7 @@ function Navbar() {
 
   let breadcrumb: React.ReactNode = (
     <span className="flex items-center gap-2">
-      <span className="w-7 h-7 rounded-full bg-obsidian text-eggshell flex items-center justify-center font-bold text-sm tracking-tighter">R</span>
-      <span className="text-slate mx-1">/</span>
-      <span className="font-medium">Styles</span>
+      <span className="font-medium">Snaps</span>
     </span>
   );
 
@@ -24,9 +22,7 @@ function Navbar() {
     breadcrumb = (
       <span className="flex items-center gap-2">
         <RouterLink to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <span className="w-7 h-7 rounded-full bg-obsidian text-eggshell flex items-center justify-center font-bold text-sm tracking-tighter">R</span>
-          <span className="text-slate mx-1">/</span>
-          <span className="font-medium text-obsidian">Styles</span>
+          <span className="font-medium text-obsidian">Snaps</span>
         </RouterLink>
         <span className="text-slate mx-1">/</span>
         <span className="text-obsidian font-medium">
